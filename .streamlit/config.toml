@@ -1,20 +1,24 @@
-# Configuração do Streamlit. Descomente e ajuste conforme o projeto avançar.
+# Configuração do Streamlit.
+# Identidade visual derivada da paleta da EDA (notebooks/eda.ipynb):
+#   roxo escuro #2d223a (COR_DESTAQUE), rosado #e9d4d0 (COR_CONTEXTO) e vermelho de alerta.
 # O tema pode ser trocado pelo menu ⋮ → Settings → Choose app theme.
 
 [theme]
 paddingTop = "0.0rem"     # espaço abaixo da barra do topo (valor entre aspas)
-# font = "sans serif"     # "sans serif", "serif" ou "monospace"
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
 
 [theme.light]
-primaryColor = "#c1121f"            # cor de destaque (widgets, links): mesmo vermelho dos histogramas
-backgroundColor = "#ffffff"         # fundo da página
-secondaryBackgroundColor = "#f0f2f6"  # fundo da sidebar e de widgets
-textColor = "#31333f"               # cor do texto
-borderColor = "#d5dae5"
+primaryColor = "#6a4c93"              # cor de destaque (widgets, links): mesmo roxo dos histogramas e barras
+backgroundColor = "#fdfbfb"           # fundo da página
+secondaryBackgroundColor = "#f5ecea"  # fundo da sidebar e de widgets (rosado da EDA, mais claro)
+textColor = "#2d223a"                 # cor do texto (roxo escuro da EDA)
+borderColor = "#e6d6d2"
+chartCategoricalColors = ["#6a4c93", "#d1495b", "#edae49", "#00798c", "#9a8c98", "#30638e", "#b07aa1"]
 
 [theme.dark]
-primaryColor = "#c1121f"
-backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#262730"
-textColor = "#fafafa"
-borderColor = "#41444e"
+primaryColor = "#b39ddb"
+backgroundColor = "#17121d"
+secondaryBackgroundColor = "#251d2e"
+textColor = "#f2ecf4"
+borderColor = "#3a2f45"
+chartCategoricalColors = ["#b39ddb", "#ef6f7f", "#f3c26b", "#3fb3c4", "#c4b7c2", "#6f9fd1", "#d6a3c9"]
