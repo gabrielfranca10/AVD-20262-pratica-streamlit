@@ -1,4 +1,5 @@
-streamlit>=1.50,<2.0
+# 1.66+: abas com on_change/.open, st.metric com chart_data/delta_description e st.container(horizontal=True)
+streamlit>=1.66,<2.0
 pandas>=2.2,<3.0
 numpy>=2.0,<3.0
 matplotlib>=3.9,<4.0
