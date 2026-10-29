@@ -1,3 +1,4 @@
+# [IA] Claude Code (Claude Opus 5.5) – estrutura do app e abas dos dois dashboards (esqueleto da Aula 21 gerado a partir do rascunho, abas na Aula 22)
 import streamlit as st
 
 from src import dashboard1, dashboard2

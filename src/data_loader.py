@@ -1,3 +1,4 @@
+# [IA] Claude Code (Claude Opus 5.5) – leitura do CSV tratado com cache (@st.cache_data)
 import pandas as pd
 import streamlit as st
 

@@ -1,3 +1,4 @@
+# [IA] Claude Code (Claude Opus 5.5) – código do Dashboard 1 (widgets, heatmap e histogramas em Altair)
 """Dashboard 1: correlação (Spearman) e distribuição das variáveis quantitativas."""
 
 import altair as alt

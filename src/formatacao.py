@@ -1,3 +1,4 @@
+# [IA] Claude Code (Claude Opus 5.5) – formatação de números no padrão brasileiro
 """Formatação de números no padrão brasileiro, usada nos textos, KPIs e gráficos."""
 
 # Locale do Vega-Lite: eixos e tooltips dos gráficos Altair com vírgula decimal e ponto no milhar

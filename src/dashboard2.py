@@ -1,3 +1,4 @@
+# [IA] Claude Code (Claude Opus 5.5) – código do Dashboard 2 (cálculo dos KPIs, widgets, gráficos em Altair e seleção cruzada)
 """Dashboard 2: KPIs de vendas e de problemas nos pedidos.
 
 As métricas e o motivo de cada uma estão em entregas/justificativa-metricas.md.
