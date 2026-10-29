@@ -1,4 +1,54 @@
-# AVD-20262-pratica-streamlit
+# Dashboards de vendas: e-commerce de eletrônicos
+
+**App publicado:** _(preencher após o deploy)_
+
+Dois dashboards em Streamlit construídos a partir da minha análise exploratória (EDA) de 49 mil pedidos de um e-commerce de eletrônicos (jan/2024 a jun/2026, dataset público do Kaggle). O primeiro é exploratório, para quem analisa os dados; o segundo resume o negócio em KPIs para quem toma decisão.
+
+| Dashboard 1: correlação e distribuição | Dashboard 2: KPIs |
+| --- | --- |
+| ![Dashboard 1](docs/img/dashboard1.png) | ![Dashboard 2](docs/img/dashboard2.png) |
+
+## O que dá para ver
+
+**Dashboard 1: correlação e distribuição das variáveis quantitativas**
+- Heatmap da correlação de Spearman e um histograma por variável (`Age`, `Quantity`, `Discount`, `UnitPrice`, `Sales`).
+- Filtros: quais variáveis entram e um intervalo de qualquer uma delas (ex.: cortar pedidos de valor extremo e ver se a correlação muda).
+- Leitura principal: o valor do pedido acompanha o preço unitário (ρ = 0,87) e a quantidade (ρ = 0,46), e o desconto praticamente não se relaciona com o valor do pedido (ρ = −0,07). O histograma de idade mostra a anomalia em 41 anos que a EDA identificou.
+
+**Dashboard 2: KPIs de vendas e de problemas nos pedidos**
+- 4 KPIs (pedidos, faturamento, ticket médio e taxa de problema), cada um com a variação em relação ao período anterior de mesmo tamanho e um minigráfico mensal.
+- Filtros: período (meses) e segmento de cliente. Clicar numa categoria do gráfico de faturamento filtra o painel inteiro (seleção cruzada).
+- Leitura principal: nos últimos 12 meses o volume de pedidos caiu 13,4%, mas o ticket médio ficou estável (+0,3%). A queda do faturamento veio do número de pedidos, não do valor de cada um. A taxa de cancelamento/devolução (~8%) é parecida entre as formas de pagamento.
+- O porquê de cada métrica está em [entregas/justificativa-metricas.md](entregas/justificativa-metricas.md).
+
+## Stack
+
+- **Python 3.13** e **Streamlit 1.66** (abas, `st.metric`, cache com `st.cache_data`, tema claro/escuro em `.streamlit/config.toml`)
+- **pandas** e **NumPy** para os cálculos, **Altair** para os gráficos interativos (incluindo a seleção cruzada com `on_select`)
+- EDA em notebook com **seaborn**, **matplotlib** e **SciPy** (testes de normalidade, qui², Kruskal-Wallis)
+- Deploy no **Streamlit Community Cloud**
+
+## Estrutura
+
+```
+app.py                  # ponto de entrada: abas dos dois dashboards
+src/
+  data_loader.py        # leitura do CSV tratado, com cache
+  dashboard1.py         # correlação + distribuição
+  dashboard2.py         # KPIs
+  formatacao.py         # números no padrão brasileiro (textos e gráficos)
+data/clean/dataset.csv  # dataset tratado, exportado pela EDA (é o que o app lê)
+notebooks/              # EDA original e versão que exporta os dados
+entregas/               # rascunhos dos layouts e justificativa das métricas
+prompts/                # prompt usado e declaração de uso de IA
+.streamlit/config.toml  # identidade visual
+```
+
+Para rodar localmente, siga o [Setup](#setup) abaixo e use `streamlit run app.py`.
+
+---
+
+## Sobre a atividade (repositório-modelo da disciplina)
 
 Repositório utilizado para aula prática relacionada a Streamlit na disciplina Análise e Visualização de Dados da Cesar School no período de 2026.2.
 
