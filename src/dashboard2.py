@@ -158,20 +158,24 @@ def grafico_pagamento(dados):
         dados.groupby("PaymentMethod")
         .agg(taxa=("desfecho", lambda s: s.eq("Problema").mean()), pedidos=("OrderID", "size"))
         .reset_index()
+        .sort_values("taxa", ascending=False)
     )
     base = alt.Chart(por_pagamento).encode(
         # tickMinStep evita rótulos repetidos no eixo (0%, 1%, 1%, 2%...)
         x=alt.X("taxa:Q", title="Taxa de problema", axis=alt.Axis(format=".0%", tickMinStep=0.01)),
-        y=alt.Y("PaymentMethod:N", sort="-x", title=None),
+        # Ordem fixa (maior taxa no topo): com sort="-x" as camadas barra + texto geram aviso de ordem conflitante
+        y=alt.Y("PaymentMethod:N", sort=por_pagamento["PaymentMethod"].tolist(), title=None),
         tooltip=[
             alt.Tooltip("PaymentMethod:N", title="Pagamento"),
             alt.Tooltip("taxa:Q", title="Taxa de problema", format=".1%"),
             alt.Tooltip("pedidos:Q", title="Pedidos", format=","),
         ],
     )
-    barras = base.mark_bar(color=COR_ALERTA) + base.mark_text(align="left", dx=6, fontWeight=600).encode(
-        text=alt.Text("taxa:Q", format=".1%")
+    # Rótulo dentro da barra, no início, para a linha da taxa geral (perto do fim das barras) não passar por cima
+    rotulos = base.mark_text(align="left", dx=8, color="white", fontWeight=600).encode(
+        x=alt.datum(0), text=alt.Text("taxa:Q", format=".1%")
     )
+    barras = base.mark_bar(color=COR_ALERTA) + rotulos
     taxa_geral = dados["desfecho"].eq("Problema").mean()
     referencia = (
         alt.Chart(pd.DataFrame({"taxa": [taxa_geral]}))
@@ -187,6 +191,7 @@ def render(df):
     df = df.assign(mes=df["OrderDate"].dt.to_period("M"))
     meses = sorted(df["mes"].unique())
 
+    # persist_state="page": os filtros continuam como estavam ao voltar da aba do Dashboard 1
     with st.sidebar:
         st.header("Filtros")
         inicio, fim = st.select_slider(
@@ -195,12 +200,16 @@ def render(df):
             value=(meses[-12], meses[-1]),  # padrão: últimos 12 meses
             format_func=nome_mes,
             help="Os deltas dos KPIs comparam com o período anterior de mesmo tamanho.",
+            key="d2_periodo",
+            persist_state="page",
         )
         segmentos = st.pills(
             "Segmento de cliente",
             SEGMENTOS,
             selection_mode="multi",
             default=SEGMENTOS,
+            key="d2_segmentos",
+            persist_state="page",
         )
 
     if not segmentos:
@@ -264,7 +273,7 @@ def render(df):
             st.subheader("Pedidos por faixa de valor")
             st.altair_chart(grafico_faixas(df_periodo), width="stretch", alt="Pedidos por faixa de valor do pedido")
             ate_50 = df_periodo["Sales"].le(50).mean()
-            st.caption(f"Sales discretizado em faixas: {ate_50:.0%} dos pedidos do filtro atual são de até 50.")
+            st.caption(f"Sales em faixas: {ate_50:.0%} dos pedidos do filtro atual são de até 50.")
 
     with st.container(border=True):
         st.subheader("Taxa de problema por forma de pagamento")

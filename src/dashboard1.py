@@ -13,6 +13,8 @@ VARS_QUANT = ["Age", "Quantity", "Discount", "UnitPrice", "Sales"]
 # Cores fixas que funcionam nos temas claro e escuro (as barras usam a cor do tema)
 COR_MEDIANA = "#d1495b"
 COR_TEXTO_ESCURO = "#2d223a"
+# O tema do Streamlit não colore o subtítulo dos gráficos: cinza médio fica legível no fundo claro e no escuro
+COR_SUBTITULO = "#8e8496"
 # Escala divergente da correlação: vermelho (negativa) → claro (zero) → roxo (positiva)
 ESCALA_CORRELACAO = alt.Scale(domain=[-1, 0, 1], range=["#b8323f", "#f4eef1", "#4b2e83"])
 
@@ -54,7 +56,11 @@ def heatmap_correlacao(df, variaveis):
 
 def histograma(serie):
     nome = serie.name
-    titulo = alt.Title(nome, subtitle=f"mediana {numero(serie.median(), 1)} · média {numero(serie.mean(), 1)}")
+    titulo = alt.Title(
+        nome,
+        subtitle=f"mediana {numero(serie.median(), 1)} · média {numero(serie.mean(), 1)}",
+        subtitleColor=COR_SUBTITULO,
+    )
 
     # Mesma regra do notebook: até 12 valores distintos é tratada como discreta (uma barra por valor)
     if serie.nunique() <= 12:
@@ -105,7 +111,8 @@ def histograma(serie):
 def render(df):
     st.title("Correlação e distribuição das variáveis quantitativas")
 
-    # Sidebar: filtros (variáveis + intervalo)
+    # Sidebar: filtros (variáveis + intervalo).
+    # persist_state="page": os filtros continuam como estavam ao voltar da aba do Dashboard 2
     with st.sidebar:
         st.header("Filtros")
 
@@ -114,6 +121,8 @@ def render(df):
             options=VARS_QUANT,
             default=VARS_QUANT,
             help="Variáveis que entram na correlação e na distribuição.",
+            key="d1_variaveis",
+            persist_state="page",
         )
 
         var_intervalo = st.selectbox(
@@ -121,6 +130,8 @@ def render(df):
             options=VARS_QUANT,
             index=VARS_QUANT.index("Sales"),
             help="Ex.: cortar os pedidos de valor extremo e ver se a correlação muda.",
+            key="d1_var_intervalo",
+            persist_state="page",
         )
 
         # Todas as quantitativas do dataset são inteiras (ex.: 4.0), então o slider usa passo 1
@@ -131,7 +142,8 @@ def render(df):
             max_value=maximo,
             value=(minimo, maximo),
             step=1,
-            key=f"intervalo_{var_intervalo}",
+            key=f"d1_intervalo_{var_intervalo}",
+            persist_state="page",
         )
 
     # Mantém só os pedidos dentro do intervalo escolhido
@@ -178,5 +190,11 @@ def render(df):
                     st.altair_chart(histograma(df_filtrado[var]), width="stretch", alt=f"Histograma de {var}")
             st.caption("Linha tracejada = mediana (só nas variáveis contínuas).")
 
-    with st.expander("Ver dados filtrados"):
-        st.dataframe(df_filtrado[variaveis], width="stretch")
+    # on_change="rerun" + .open: a tabela (até 49 mil linhas) só é montada quando o expander está aberto
+    expander = st.expander("Ver dados filtrados", key="d1_dados", on_change="rerun")
+    if expander.open:
+        with expander:
+            if variaveis:
+                st.dataframe(df_filtrado[variaveis], width="stretch", alt="Pedidos dentro do intervalo escolhido")
+            else:
+                st.info("Selecione pelo menos 1 variável para ver os dados.")
