@@ -51,6 +51,7 @@ Utilizei o Claude Code (Anthropic), com o modelo Claude Opus 5.5, integrado ao V
   - Exibição das taxas nas barras do gráfico de forma de pagamento e atualização da legenda das faixas de valor conforme os filtros aplicados.
   - Revisão da estrutura do repositório e atualização da versão mínima do Streamlit no `requirements.txt` para 1.66, utilizada nos testes.
   - Reorganização do README do projeto, incluindo descrição, principais análises, capturas de tela em `docs/img/`, tecnologias e estrutura das pastas.
+  - Revisão geral antes da entrega: os filtros de cada dashboard agora continuam como estavam ao trocar de aba, a tabela de "Ver dados filtrados" só é carregada quando o expander é aberto, o gráfico de forma de pagamento deixou de gerar um aviso no navegador e os subtítulos dos histogramas ficaram legíveis no tema escuro. Também conferi que o notebook `eda-com-downloads.ipynb` roda do início ao fim e gera exatamente o mesmo `data/clean/dataset.csv` que está no repositório.
 - **Modificado:**
   - Não houve mudanças relevantes em relação à proposta desta aula.
 - **Rejeitado:**
