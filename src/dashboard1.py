@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from src.formatacao import em_portugues, numero
+
 # Variáveis quantitativas do estudo (mesma lista VARS_QUANT do notebook de EDA)
 VARS_QUANT = ["Age", "Quantity", "Discount", "UnitPrice", "Sales"]
 
@@ -27,10 +29,12 @@ def heatmap_correlacao(df, variaveis):
         ]
     )
     # Variável constante no intervalo → correlação indefinida (NaN), mostrada como "—"
-    dados["rotulo"] = dados["r"].map(lambda r: "—" if pd.isna(r) else f"{r:.2f}")
+    # (o "+ 0.0" evita o "-0,00" quando o valor arredondado é zero)
+    dados["rotulo"] = dados["r"].map(lambda r: "—" if pd.isna(r) else numero(round(r, 2) + 0.0, 2))
 
     base = alt.Chart(dados).encode(
-        x=alt.X("coluna:N", sort=variaveis, title=None, axis=alt.Axis(labelAngle=0)),
+        # labelOverlap=False: mostra o nome de todas as variáveis, mesmo com o heatmap estreito
+        x=alt.X("coluna:N", sort=variaveis, title=None, axis=alt.Axis(labelAngle=-35, labelOverlap=False)),
         y=alt.Y("linha:N", sort=variaveis, title=None),
     )
     celulas = base.mark_rect(stroke="white", strokeWidth=1).encode(
@@ -45,18 +49,18 @@ def heatmap_correlacao(df, variaveis):
         text="rotulo:N",
         color=alt.condition("abs(datum.r) > 0.5", alt.value("white"), alt.value(COR_TEXTO_ESCURO)),
     )
-    return (celulas + rotulos).properties(height=60 * len(variaveis) + 40), corr
+    return em_portugues((celulas + rotulos).properties(height=60 * len(variaveis) + 40)), corr
 
 
 def histograma(serie):
     nome = serie.name
-    titulo = alt.Title(nome, subtitle=f"mediana {serie.median():g} · média {serie.mean():.1f}")
+    titulo = alt.Title(nome, subtitle=f"mediana {numero(serie.median(), 1)} · média {numero(serie.mean(), 1)}")
 
     # Mesma regra do notebook: até 12 valores distintos é tratada como discreta (uma barra por valor)
     if serie.nunique() <= 12:
         contagem = serie.value_counts().sort_index()
         dados = pd.DataFrame({"valor": contagem.index, "pedidos": contagem.values})
-        return (
+        return em_portugues(
             alt.Chart(dados, title=titulo)
             .mark_bar()
             .encode(
@@ -67,14 +71,20 @@ def histograma(serie):
             .properties(height=220)
         )
 
-    # Contínua: agrega em 30 faixas no pandas e manda só as contagens para o gráfico (e não 49 mil linhas)
-    contagens, bordas = np.histogram(serie, bins=30)
+    # Contínua: agrega no pandas e manda só as contagens para o gráfico (e não 49 mil linhas).
+    # Inteiros com até 60 valores possíveis (ex.: Age) ganham uma barra por valor, sem faixas vazias no meio.
+    minimo, maximo = serie.min(), serie.max()
+    if maximo - minimo <= 60 and (serie % 1 == 0).all():
+        bins = np.arange(minimo, maximo + 2) - 0.5
+    else:
+        bins = 30
+    contagens, bordas = np.histogram(serie, bins=bins)
     dados = pd.DataFrame({"inicio": bordas[:-1], "fim": bordas[1:], "pedidos": contagens})
     barras = (
         alt.Chart(dados)
-        .mark_bar()
+        .mark_bar(binSpacing=0)
         .encode(
-            x=alt.X("inicio:Q", bin="binned", title=None),
+            x=alt.X("inicio:Q", bin="binned", title=None, scale=alt.Scale(nice=False, zero=False)),
             x2="fim:Q",
             y=alt.Y("pedidos:Q", title="Pedidos"),
             tooltip=[
@@ -89,7 +99,7 @@ def histograma(serie):
         .mark_rule(color=COR_MEDIANA, strokeDash=[5, 3], strokeWidth=2)
         .encode(x="mediana:Q")
     )
-    return (barras + mediana).properties(title=titulo, height=220)
+    return em_portugues((barras + mediana).properties(title=titulo, height=220))
 
 
 def render(df):
@@ -127,7 +137,7 @@ def render(df):
     # Mantém só os pedidos dentro do intervalo escolhido
     df_filtrado = df[df[var_intervalo].between(inicio, fim)]
 
-    st.caption(f"{len(df_filtrado):,} de {len(df):,} pedidos dentro do intervalo escolhido.".replace(",", "."))
+    st.caption(f"{numero(len(df_filtrado))} de {numero(len(df))} pedidos dentro do intervalo escolhido.")
 
     # Dashboard 1: correlação (heatmap) à esquerda, distribuição (histogramas) à direita
     col_correlacao, col_distribuicao = st.columns([1, 1.5], gap="large")

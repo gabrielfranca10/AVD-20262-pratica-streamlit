@@ -7,6 +7,8 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from src.formatacao import em_portugues, numero
+
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 SEGMENTOS = ["New", "Regular", "VIP"]
 
@@ -21,11 +23,6 @@ COR_REFERENCIA = "#9a8c98"
 
 def nome_mes(periodo):
     return f"{MESES[periodo.month - 1]}/{str(periodo.year)[2:]}"
-
-
-def numero(valor, casas=0):
-    """Formata no padrão brasileiro: 1.234.567,8"""
-    return f"{valor:,.{casas}f}".replace(",", "_").replace(".", ",").replace("_", ".")
 
 
 def variacao(atual, anterior):
@@ -117,7 +114,7 @@ def grafico_categorias(dados):
         .reset_index()
     )
     clique = alt.selection_point(name="categoria", fields=["Category"])
-    return (
+    return em_portugues(
         alt.Chart(por_categoria)
         .mark_bar()
         .encode(
@@ -140,7 +137,7 @@ def grafico_faixas(dados):
     contagem = faixas.value_counts().reindex(ROTULOS_FAIXAS, fill_value=0)
     por_faixa = pd.DataFrame({"faixa": ROTULOS_FAIXAS, "pedidos": contagem.values})
     por_faixa["percentual"] = por_faixa["pedidos"] / por_faixa["pedidos"].sum()
-    return (
+    return em_portugues(
         alt.Chart(por_faixa)
         .mark_bar()
         .encode(
@@ -162,18 +159,18 @@ def grafico_pagamento(dados):
         .agg(taxa=("desfecho", lambda s: s.eq("Problema").mean()), pedidos=("OrderID", "size"))
         .reset_index()
     )
-    barras = (
-        alt.Chart(por_pagamento)
-        .mark_bar(color=COR_ALERTA)
-        .encode(
-            x=alt.X("taxa:Q", title="Taxa de problema", axis=alt.Axis(format=".0%")),
-            y=alt.Y("PaymentMethod:N", sort="-x", title=None),
-            tooltip=[
-                alt.Tooltip("PaymentMethod:N", title="Pagamento"),
-                alt.Tooltip("taxa:Q", title="Taxa de problema", format=".1%"),
-                alt.Tooltip("pedidos:Q", title="Pedidos", format=","),
-            ],
-        )
+    base = alt.Chart(por_pagamento).encode(
+        # tickMinStep evita rótulos repetidos no eixo (0%, 1%, 1%, 2%...)
+        x=alt.X("taxa:Q", title="Taxa de problema", axis=alt.Axis(format=".0%", tickMinStep=0.01)),
+        y=alt.Y("PaymentMethod:N", sort="-x", title=None),
+        tooltip=[
+            alt.Tooltip("PaymentMethod:N", title="Pagamento"),
+            alt.Tooltip("taxa:Q", title="Taxa de problema", format=".1%"),
+            alt.Tooltip("pedidos:Q", title="Pedidos", format=","),
+        ],
+    )
+    barras = base.mark_bar(color=COR_ALERTA) + base.mark_text(align="left", dx=6, fontWeight=600).encode(
+        text=alt.Text("taxa:Q", format=".1%")
     )
     taxa_geral = dados["desfecho"].eq("Problema").mean()
     referencia = (
@@ -181,7 +178,7 @@ def grafico_pagamento(dados):
         .mark_rule(color=COR_REFERENCIA, strokeDash=[5, 3], strokeWidth=2)
         .encode(x="taxa:Q", tooltip=[alt.Tooltip("taxa:Q", title="Taxa geral", format=".1%")])
     )
-    return (barras + referencia).properties(height=200)
+    return em_portugues((barras + referencia).properties(height=200))
 
 
 def render(df):
@@ -266,7 +263,8 @@ def render(df):
         with st.container(border=True):
             st.subheader("Pedidos por faixa de valor")
             st.altair_chart(grafico_faixas(df_periodo), width="stretch", alt="Pedidos por faixa de valor do pedido")
-            st.caption("Sales discretizado em faixas: a maior parte dos pedidos é de valor baixo.")
+            ate_50 = df_periodo["Sales"].le(50).mean()
+            st.caption(f"Sales discretizado em faixas: {ate_50:.0%} dos pedidos do filtro atual são de até 50.")
 
     with st.container(border=True):
         st.subheader("Taxa de problema por forma de pagamento")
